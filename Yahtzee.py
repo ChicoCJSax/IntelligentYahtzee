@@ -4,6 +4,8 @@ import random
 import sys
 import Player
 from collections import Counter
+import time
+import AiFuncs
 
 def rerollDice(dice, selectedDice, freshDice = False):
     if freshDice == True:
@@ -14,6 +16,28 @@ def rerollDice(dice, selectedDice, freshDice = False):
         if not selectedDice[i]:
             dice[i] = random.randint(1, 6)
 
+def drawPlayerScores(playerObj, key, value, turnCheck = False):
+    if not turnCheck: #if not  player's turn, draw only true scores, otherwise draw all 
+        if playerObj.scores[key][1] == 1:    
+            drawScores(playerObj, key, value)
+    else:
+        drawScores(playerObj, key, value)
+
+def drawScores(playerObj, key, value):
+    textColor = getScoreColor(playerObj.scores[key][1])
+    scoreText = scoreFont.render(str(playerObj.scores[key][0]), True, textColor)
+    if(len(str(playerObj.scores[key][0])) == 1):
+        screen.blit(scoreText, (value[0]+4, value[1]))
+    else:
+        screen.blit(scoreText, (value[0]-2, value[1]))
+    
+def getScoreColor(locked):
+    color = None
+    if locked:
+        color = "Black"
+    else:
+        color = "lightyellow"
+    return color
 
 def getBorderColor(selected):
     color = None
@@ -24,31 +48,38 @@ def getBorderColor(selected):
 
     return color        
 
-def getTextColor(scoreFlag):
-    color = None
-    if scoreFlag:
-        color = "Black"
-    else:
-        color = "deepskyblue"
-
-    return color        
-
-
-player1ScoreCords = {
-            "1s": [589, 96],
-            "2s": [589, 156],
-            "3s": [582, 208],
-            "4s": [577, 260],
-            "5s": [578, 306],
-            "6s": [580, 340],
-            "ThreeOAK": [682, 95],
-            "FourOAK": [682, 139],
-            "fullhse": [675, 183],
-            "sstr8": [675, 232],
-            "lstr8": [666, 278],
-            "yahtzee": [665, 314],
-            "chance": [675, 359]
+     
+playerScoreCords = {
+            "1s": [570, 90],
+            "2s": [570, 140],
+            "3s": [570, 190],
+            "4s": [570, 240],
+            "5s": [570, 290],
+            "6s": [570, 330],
+            "ThreeOAK": [660, 90],
+            "FourOAK": [660, 140],
+            "fullhse": [660, 190],
+            "sstr8": [660, 240],
+            "lstr8": [660, 290],
+            "yahtzee": [660, 330],
+            "chance": [660, 370]
 }
+botScoreCords = {
+            "1s": [605, 90],
+            "2s": [605, 140],
+            "3s": [605, 190],
+            "4s": [605, 240],
+            "5s": [605, 290],
+            "6s": [605, 330],
+            "ThreeOAK": [695, 90],
+            "FourOAK": [695, 140],
+            "fullhse": [695, 190],
+            "sstr8": [695, 240],
+            "lstr8": [695, 290],
+            "yahtzee": [695, 330],
+            "chance": [695, 370]
+}
+
 
 
 pygame.init()
@@ -72,14 +103,51 @@ for i in range(0, 5):
     dice.append(random.randint(1,6))
 
 
-player1 = Player.Player()
+player = Player.Player()
+bot = Player.Player()
+playerScore = 0
+botScore = 0
+playerBonus = 0
+botBonus = 0
+
 rerollNum = 2
+playerTurn = True
+
 while running:
     screen.fill("lightgray")
+    flag = False #check to see if any score values are unlocked/equal False
+    for val in player.scores.values():
+        if val[1] == False:
+            flag = True
+
+    for val in bot.scores.values():
+        if val[1] == False:
+            flag = True
+
+    if flag == False:
+        print("Your final score is: " +str(playerScore))
+        print("The bot's final score is "+str(botScore))
+        time.sleep(5)
+        running = False
+        
+    if playerTurn == False:
+        botChoice = AiFuncs.getLevelZeroChoice(rerollNum, bot)
+        time.sleep(1.5)
+        if botChoice == "reroll":
+            rerollDice(dice, selectedDie)
+            rerollNum -= 1
+        else:
+            botScore+= bot.scores[botChoice][0]
+            bot.lockScore(botChoice)
+            rerollDice(dice, selectedDie, freshDice=True)
+            rerollNum = 2
+            playerTurn = True
+                   
     for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        elif event.type  == pygame.MOUSEBUTTONDOWN:
+        
+        if event.type == pygame.QUIT: 
+            running = False      
+        elif event.type  == pygame.MOUSEBUTTONDOWN and playerTurn == True:
             if event.button == 1:
                 if buttonArea.collidepoint(event.pos) and rerollNum > 0:
                     rerollDice(dice, selectedDie)
@@ -90,13 +158,15 @@ while running:
                             selectedDie[i] = True
                         else:
                             selectedDie[i] = False 
-                for key, value in player1ScoreCords.items():
-                    scoreArea = pygame.Rect(value[0]-5, value[1]-5, 35, 35)
+                for key, value in playerScoreCords.items():
+                    scoreArea = pygame.Rect(value[0]-5, value[1]-5, 30, 30)
                     if scoreArea.collidepoint(event.pos):
-                        if player1.scores[key][1] == False:
-                            player1.lockScore(key)
+                        if player.scores[key][1] == False:
+                            playerScore += player.scores[key][0] 
+                            player.lockScore(key)
                             rerollDice(dice, selectedDie, freshDice=True)
                             rerollNum = 2
+                            playerTurn = False
 
     for i in range(0, 5):
         text_surface = my_font.render(str(dice[i]), False, (0, 0, 0))
@@ -105,8 +175,6 @@ while running:
         pygame.draw.rect(screen, color, pygame.Rect(diceXCords[i]-3, diceYCord-3, 162, 162)) 
         diceImg = pygame.image.load("assets/dice" +str(dice[i])+ ".png")
         screen.blit(diceImg, (diceXCords[i], diceYCord))
-        
-
 
     rerollDisplay = scoreFont.render("You have " +str(rerollNum)+ " rerolls left", True, (0, 0, 0))
     screen.blit(rerollDisplay, (37, 475))
@@ -118,21 +186,41 @@ while running:
     pygame.draw.rect(screen, "Black", pygame.Rect(340-3, 430-3, 606, 106))
     pygame.draw.rect(screen, "gray79", buttonArea)
 
-    player1.resetValues()
-    player1.updateScores(dice)
-
-    for key, value in player1ScoreCords.items():
-        textColor = getTextColor(player1.scores[key][1])
-        scoreText = scoreFont.render(str(player1.scores[key][0]), True, textColor)
-        screen.blit(scoreText, (value[0], value[1]))
+    player.resetValues()
+    player.updateScores(dice)
+    
+    bot.resetValues()
+    bot.updateScores(dice)
 
 
+    for key, value in playerScoreCords.items():
+        pygame.draw.rect(screen, "cornflowerblue", pygame.Rect(value[0]-5, value[1]-5, 30, 30))
+        drawPlayerScores(player, key, value, turnCheck=playerTurn)
+
+
+    for key, value in botScoreCords.items():
+        pygame.draw.rect(screen, "red", pygame.Rect(value[0]-5, value[1]-5, 30, 30))
+        drawPlayerScores(bot, key, value, turnCheck= not playerTurn)
+
+
+    playerDisplay = scoreFont.render("Your score is "+str(playerScore), True, (0, 0, 0))
+    screen.blit(playerDisplay, (37, 200))
+    botDisplay = scoreFont.render("The bot's score is "+str(botScore), True, (0, 0, 0))
+    screen.blit(botDisplay, (37, 300))
+
+    #bonusText = scoreFont.render(str(playerScore) + "/63", True, (0, 0, 0))
+    #screen.blit(bonusText, (572, 380))
+
+
+    if playerTurn == False:
+        turnDisplay = scoreFont.render("It is currently the bot's turn.", True, (0, 0, 0))
+    else:
+        turnDisplay = scoreFont.render("It is currently your turn.", True, (0, 0, 0))
+    screen.blit(turnDisplay, (900, 300))
 
 
     buttonText = my_font.render("Click to Reroll", True, (0, 0, 0))
     screen.blit(buttonText, (450, 435)) 
-
-
 
     pygame.display.flip()
 
