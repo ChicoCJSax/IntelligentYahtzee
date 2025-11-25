@@ -83,6 +83,8 @@ botScoreCords = {
             "chance": [695, 370]
 }
 
+playerBonusCord = [570, 370]
+botBonusCord = [605, 370]
 
 
 pygame.init()
@@ -93,7 +95,7 @@ running = True
 pygame.font.init()
 my_font = pygame.font.SysFont('Arial', 80)
 scoreFont = pygame.font.SysFont('Calibri', 25)
-
+bonusFont = pygame.font.SysFont('Calibri', 15)
 
 initialScreen = pygame.display.set_mode((1280, 720))
 loggedIn = False
@@ -193,15 +195,18 @@ while running:
         playerScore+=35
         playerBonusTrigged = True
     
+    if(botBonus>=63 and botBonusTriggered == False):
+        botScore+=35
+        botBonusTriggered = True
+    
     if playerTurn == False:
-        botChoice = AiFuncs.getLevelZeroChoice(rerollNum, bot)
-    
-    
-    
-        AiFuncs.getLevelOneChoice(bot, rerollNum, dice, selectedDie)
+        #botChoice = AiFuncs.getLevelZeroChoice(rerollNum, bot)
+        botChoice = AiFuncs.getLevelOneChoice(bot, rerollNum, dice, selectedDie)
+        print(dice)
+        print(selectedDie)
         time.sleep(1.5)
         if botChoice == "reroll":
-            time.sleep(7)
+            #time.sleep(7)
             rerollDice(dice, selectedDie)
             rerollNum -= 1
         else:
@@ -217,6 +222,7 @@ while running:
             running = False      
         elif event.type  == pygame.MOUSEBUTTONDOWN and playerTurn == True:
             if event.button == 1:
+                print(event.pos)
                 if buttonArea.collidepoint(event.pos) and rerollNum > 0:
                     playerInteracted = True
                     rerollDice(dice, selectedDie)
@@ -281,9 +287,34 @@ while running:
     botDisplay = scoreFont.render("The bot's score is "+str(botScore), True, (0, 0, 0))
     game.blit(botDisplay, (37, 300))
 
+    #bonus score stuff, red/blue squares and numbers
+    pygame.draw.rect(game, "cornflowerblue", pygame.Rect(playerBonusCord[0]-5, playerBonusCord[1]-5, 30, 30))
+    pygame.draw.rect(game, "red", pygame.Rect(botBonusCord[0]-5, botBonusCord[1]-5, 30, 30))
+
+
+
+    #playerBonusCord = [570, 370]
+    #botBonusCord = [605, 370]
+
     playerBonus = player.calculateBonus()
-    bonusText = scoreFont.render(str(playerBonus) + "/63", True, (0, 0, 0))
-    game.blit(bonusText, (572, 380))
+    playerbonusTextTop = bonusFont.render(str(playerBonus), True, (0, 0, 0))
+    playerbonusTextMiddle = bonusFont.render("___", True, (0, 0, 0))
+    playerbonusTextBottom = bonusFont.render("63", True, (0, 0, 0))
+
+    
+    game.blit(playerbonusTextTop, (577, 366))
+    game.blit(playerbonusTextMiddle, (569, 366))
+    game.blit(playerbonusTextBottom, (573, 380))
+
+    botBonus = bot.calculateBonus()
+    botbonusTextTop = bonusFont.render(str(botBonus), True, (0, 0, 0))
+    botbonusTextMiddle = bonusFont.render("___", True, (0, 0, 0))
+    botbonusTextBottom = bonusFont.render("63", True, (0, 0, 0))
+
+    
+    game.blit(botbonusTextTop, (612, 366))
+    game.blit(botbonusTextMiddle, (604, 366))
+    game.blit(botbonusTextBottom, (608, 380))
 
 
     if playerTurn == False:
