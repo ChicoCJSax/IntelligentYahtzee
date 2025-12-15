@@ -40,6 +40,15 @@ class Player:
             "chance": [0, False]
             }
   
+  
+    def calculateBonus(self):
+        sumofdice = 0
+        for i in range(1,7):
+            if(self.scores[f"{i}s"][1]):
+                sumofdice += self.scores[f"{i}s"][0]
+        return sumofdice
+    
+    
     def setScore(self, type, scoreVal):
         if self.scores[type][1] == False:
             self.scores[type][0] = scoreVal
