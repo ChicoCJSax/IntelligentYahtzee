@@ -1,5 +1,15 @@
 import pyrebase
-from firebaseConfigInfo import firebaseConfig
+
+firebaseConfig = {
+  "apiKey": "AIzaSyC0yQTUf86Gf9gilT5faIQWpuN7nDnXWts",
+  "authDomain": "intelligentyahtzee.firebaseapp.com",
+  "projectId": "intelligentyahtzee",
+  "storageBucket": "intelligentyahtzee.firebasestorage.app",
+  "messagingSenderId": "346054723591",
+  "appId": "1:346054723591:web:d6e733c26ae92c0f0cc2a2",
+  "measurementId": "G-J86SRE8G37",
+  "databaseURL": "https://intelligentyahtzee-default-rtdb.firebaseio.com/"
+}
 
 firebase = pyrebase.initialize_app(firebaseConfig)
 
