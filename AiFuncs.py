@@ -13,16 +13,23 @@ smallStr8Hands = [{1, 2, 3, 4}, {2, 3, 4, 5}, {3, 4, 5, 6}]
 
 
 def getLevelZeroChoice(rerolls, botObj):
-    #decision = random.randint(0, 1)
-    if rerolls > 0:
+    decision = random.randint(0, 1)
+    if rerolls > 0 and decision == 1:
         return "reroll"
     else:
-        nonLockedScores = []
+        nonLockedScores = {}
         for key in botObj.scores.keys():
             if botObj.scores[key][1] == False:
-                nonLockedScores.append(key)
-        
-        return random.choice(nonLockedScores)
+                nonLockedScores[key] = botObj.scores[key][0]
+
+        highest = -1
+        diceToReturn = None
+        for dice, value in nonLockedScores.items():
+            if value > highest:
+                highest = value
+                diceToReturn = dice
+
+        return diceToReturn
 
 
 
@@ -123,17 +130,27 @@ def getLevelOneChoice(botObj, rerolls,  currentDice, selectedDice):
             if(value >=3 and botObj.scores[f'{diceType}s'][1] == False):
                 return f'{diceType}s'
     
+    
+    #all 3 of a kind choices above were fallbacks, so this is incase it gets bad luck
+    if(botObj.scores['ThreeOAK'][1] == False and max(diceCounts.values())>=3):
+        print("going after 3 of a kind")
+        return "ThreeOAK"
+    
+    
     #pick dice with amount of 2, if hand is junk
     diceToSave = 0
+    highestValueDice = 0
     for dice, value in diceCounts.items():
-        if(value == 2 and botObj.scores[f'{dice}s'][1] == False):
-            diceToSave = dice
-            break
+        if(value >= 2 and botObj.scores[f'{dice}s'][1] == False):
+            if(highestValueDice<dice):
+                diceToSave = dice
+                highestValueDice = dice
+            
     
     if(diceToSave != 0):
         for i in range(0, len(currentDice)):
             if(currentDice[i] == diceToSave):
-                selectedDice[i] == True
+                selectedDice[i] = True
         if(rerolls>0):
             return "reroll"
         else:
