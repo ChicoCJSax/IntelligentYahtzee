@@ -16,20 +16,21 @@ firebase = pyrebase.initialize_app(firebaseConfig)
 auth = firebase.auth()
 db = firebase.database()
 
-def signup(email, password):
-    try:
-      user=auth.create_user_with_email_and_password(email, password)
-      return user
-    except:
-      print("Error logging in. User already exists or email is invalid.")
-
 def login(email, password):
     try:
-      user=auth.sign_in_with_email_and_password(email, password)
-      print("User logged in!")
-      return user
-    except:
-      print("Invalid email or password!")
+        user = auth.sign_in_with_email_and_password(email, password)
+        print("User logged in!")
+        return user
+    except Exception as e:
+        raise ValueError("Invalid login") from e
+
+def signup(email, password):
+    try:
+        user = auth.create_user_with_email_and_password(email, password)
+        print("User signed up!")
+        return user
+    except Exception as e:
+        raise ValueError("Signup failed") from e
 
 def saveMaxScore(user, score):
     try:
